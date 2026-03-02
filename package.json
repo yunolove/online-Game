@@ -1,5 +1,5 @@
 {
-  "name": "my-game",
+  "name": "my-chat-app",
   "scripts": { "start": "node server.js" },
   "dependencies": {
     "express": "^4.18.2",
