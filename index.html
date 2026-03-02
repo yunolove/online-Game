@@ -2,36 +2,45 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>실시간 게임</title>
+    <title>실시간 익명 채팅</title>
+    <style>
+        body { font-family: sans-serif; background: #f0f2f5; display: flex; flex-direction: column; height: 100vh; margin: 0; }
+        #messages { list-style-type: none; margin: 0; padding: 20px; flex-grow: 1; overflow-y: auto; }
+        #messages li { background: white; padding: 10px; margin-bottom: 10px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        #form { background: white; padding: 10px; display: flex; border-top: 1px solid #ddd; }
+        #input { border: 1px solid #ddd; padding: 10px; flex-grow: 1; border-radius: 20px; outline: none; }
+        #send { background: #0084ff; color: white; border: none; padding: 10px 20px; margin-left: 10px; border-radius: 20px; cursor: pointer; }
+    </style>
 </head>
-<body style="margin:0; overflow:hidden; background:#333; text-align:center;">
-    <h2 style="color:white;">방향키로 움직이세요!</h2>
-    <canvas id="g" width="500" height="400" style="background:white;"></canvas>
+<body>
+    <ul id="messages"></ul>
+    <form id="form">
+        <input id="input" autocomplete="off" placeholder="메시지를 입력하세요..." /><button id="send">전송</button>
+    </form>
 
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script>
         const socket = io();
-        const ctx = document.getElementById('g').getContext('2d');
-        let ps = {};
+        const form = document.getElementById('form');
+        const input = document.getElementById('input');
+        const messages = document.getElementById('messages');
 
-        socket.on("update", (data) => { ps = data; draw(); });
-
-        function draw() {
-            ctx.clearRect(0, 0, 500, 400);
-            for (let id in ps) {
-                ctx.fillStyle = (id === socket.id) ? "red" : "blue";
-                ctx.fillRect(ps[id].x, ps[id].y, 30, 30);
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (input.value) {
+                // 서버로 메시지 전송
+                socket.emit('chat message', input.value);
+                input.value = '';
             }
-        }
+        });
 
-        window.onkeydown = (e) => {
-            let d = {x:0, y:0};
-            if(e.key==="ArrowUp") d.y=-10;
-            if(e.key==="ArrowDown") d.y=10;
-            if(e.key==="ArrowLeft") d.x=-10;
-            if(e.key==="ArrowRight") d.x=10;
-            socket.emit("move", d);
-        };
+        // 서버에서 메시지를 받으면 화면에 추가
+        socket.on('chat message', (msg) => {
+            const item = document.createElement('li');
+            item.textContent = msg;
+            messages.appendChild(item);
+            window.scrollTo(0, document.body.scrollHeight);
+        });
     </script>
 </body>
 </html>
