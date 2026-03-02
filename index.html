@@ -1,41 +1,36 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>초간단 멀티플레이</title>
-    <style>canvas { border: 3px solid #333; background: #eee; }</style>
+    <meta charset="UTF-8">
+    <title>실시간 게임</title>
 </head>
-<body>
-    <button onclick="copyLink()">🔗 링크 복사해서 친구 주기</button>
-    <canvas id="game" width="500" height="400"></canvas>
+<body style="margin:0; overflow:hidden; background:#333; text-align:center;">
+    <h2 style="color:white;">방향키로 움직이세요!</h2>
+    <canvas id="g" width="500" height="400" style="background:white;"></canvas>
+
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        const socket = io(); // 주소 안 적어도 자동으로 연결됨!
-        const canvas = document.getElementById('game');
-        const ctx = canvas.getContext('2d');
-        let players = {};
+        const socket = io();
+        const ctx = document.getElementById('g').getContext('2d');
+        let ps = {};
 
-        function copyLink() {
-            navigator.clipboard.writeText(window.location.href);
-            alert("링크 복사 완료!");
-        }
-
-        socket.on("update", (data) => { players = data; draw(); });
+        socket.on("update", (data) => { ps = data; draw(); });
 
         function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            for (let id in players) {
-                ctx.fillStyle = players[id].color;
-                ctx.fillRect(players[id].x, players[id].y, 30, 30);
+            ctx.clearRect(0, 0, 500, 400);
+            for (let id in ps) {
+                ctx.fillStyle = (id === socket.id) ? "red" : "blue";
+                ctx.fillRect(ps[id].x, ps[id].y, 30, 30);
             }
         }
 
         window.onkeydown = (e) => {
-            let m = { x: 0, y: 0 };
-            if (e.key === "ArrowUp") m.y = -10;
-            if (e.key === "ArrowDown") m.y = 10;
-            if (e.key === "ArrowLeft") m.x = -10;
-            if (e.key === "ArrowRight") m.x = 10;
-            socket.emit("move", m);
+            let d = {x:0, y:0};
+            if(e.key==="ArrowUp") d.y=-10;
+            if(e.key==="ArrowDown") d.y=10;
+            if(e.key==="ArrowLeft") d.x=-10;
+            if(e.key==="ArrowRight") d.x=10;
+            socket.emit("move", d);
         };
     </script>
 </body>
