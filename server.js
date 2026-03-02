@@ -1,19 +1,21 @@
 const express = require("express");
-const http = require("http").createServer(express().use(express.static("."))); 
+const app = express();
+const http = require("http").createServer(app);
 const io = require("socket.io")(http);
 
+// 기본 페이지 접속 시 index.html을 보여줌
+app.use(express.static("."));
+
 io.on("connection", (socket) => {
-  console.log("누군가 입장함!");
+  console.log("새 유저 접속");
 
-  // 누군가 메시지를 보내면
-  socket.on("chat message", (msg) => {
-    // 모든 사람에게 그 메시지를 다시 뿌림
-    io.emit("chat message", msg);
-  });
-
-  socket.on("disconnect", () => {
-    console.log("누군가 퇴장함");
+  // 유저가 'message'라는 이름으로 글을 보내면
+  socket.on("message", (msg) => {
+    // 접속한 모든 사람에게 그 글을 그대로 뿌림
+    io.emit("message", msg);
   });
 });
 
-http.listen(process.env.PORT || 3000);
+http.listen(process.env.PORT || 3000, () => {
+  console.log("채팅 전용 서버 가동 중!");
+});
