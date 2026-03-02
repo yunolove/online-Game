@@ -1,49 +1,42 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>HTML 온라인 게임 실습</title>
-    <style>
-        canvas { border: 2px solid black; background: #f0f0f0; }
-    </style>
+    <title>초간단 멀티플레이</title>
+    <style>canvas { border: 3px solid #333; background: #eee; }</style>
 </head>
 <body>
-    <h1>실시간 멀티플레이 캔버스</h1>
-    <canvas id="gameCanvas" width="500" height="400"></canvas>
-
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <button onclick="copyLink()">🔗 링크 복사해서 친구 주기</button>
+    <canvas id="game" width="500" height="400"></canvas>
+    <script src="/socket.io/socket.io.js"></script>
     <script>
-        const canvas = document.getElementById('gameCanvas');
+        const socket = io(); // 주소 안 적어도 자동으로 연결됨!
+        const canvas = document.getElementById('game');
         const ctx = canvas.getContext('2d');
-        const socket = io('http://localhost:3000'); // 서버 주소에 연결
+        let players = {};
 
-        let allPlayers = {};
+        function copyLink() {
+            navigator.clipboard.writeText(window.location.href);
+            alert("링크 복사 완료!");
+        }
 
-        // 서버로부터 플레이어 정보를 받음
-        socket.on('updatePlayers', (players) => {
-            allPlayers = players;
-            draw();
-        });
+        socket.on("update", (data) => { players = data; draw(); });
 
-        // 화면 그리기 함수
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            for (let id in allPlayers) {
-                const p = allPlayers[id];
-                ctx.fillStyle = (id === socket.id) ? "blue" : "red"; // 내 캐릭터는 파란색
-                ctx.fillRect(p.x, p.y, 30, 30);
+            for (let id in players) {
+                ctx.fillStyle = players[id].color;
+                ctx.fillRect(players[id].x, players[id].y, 30, 30);
             }
         }
 
-        // 키보드 입력 보내기
-        window.addEventListener('keydown', (e) => {
-            let move = { x: 0, y: 0 };
-            if (e.key === 'ArrowUp') move.y = -5;
-            if (e.key === 'ArrowDown') move.y = 5;
-            if (e.key === 'ArrowLeft') move.x = -5;
-            if (e.key === 'ArrowRight') move.x = 5;
-            
-            socket.emit('move', move); // 서버로 내 움직임을 보냄
-        });
+        window.onkeydown = (e) => {
+            let m = { x: 0, y: 0 };
+            if (e.key === "ArrowUp") m.y = -10;
+            if (e.key === "ArrowDown") m.y = 10;
+            if (e.key === "ArrowLeft") m.x = -10;
+            if (e.key === "ArrowRight") m.x = 10;
+            socket.emit("move", m);
+        };
     </script>
 </body>
 </html>
