@@ -1,14 +1,11 @@
 const express = require("express");
-const app = express();
-const http = require("http").Server(app);
+const http = require("http").createServer(express().use(express.static("."))); 
 const io = require("socket.io")(http);
-
-app.use(express.static("public"));
 
 let players = {};
 
 io.on("connection", (socket) => {
-  players[socket.id] = { x: 100, y: 100, color: "#" + Math.floor(Math.random()*16777215).toString(16) };
+  players[socket.id] = { x: 250, y: 200, color: "blue" };
   io.emit("update", players);
 
   socket.on("move", (data) => {
@@ -25,6 +22,4 @@ io.on("connection", (socket) => {
   });
 });
 
-http.listen(process.env.PORT || 3000, () => {
-  console.log("서버가 가동되었습니다!");
-});
+http.listen(process.env.PORT || 3000);
